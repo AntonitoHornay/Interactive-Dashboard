@@ -1,0 +1,365 @@
+---
+title: "Anto Dasboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: [ "twitter", "facebook","whatsapp","instagram", "menu"]
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(tidyverse)
+library(hrbrthemes)
+library(kableExtra)
+library(treemap)
+```
+
+
+
+```{r}
+mydata <- read.csv("E:/ADI BUANA/LAST/data1.csv")
+```
+
+```{r}
+mycolors <- c("blue", "#FFC125", "darkgreen", "darkorange")
+```
+
+Interactive Data Visualization
+=====================================
+
+Row
+-------------------------------------
+
+### Total unemployment
+
+```{r}
+valueBox(sum(mydata$pengangguran),
+         icon = 'fa-area-chart')
+```
+
+### Highest poverty
+
+```{r}
+valueBox(max(mydata$penduduk_miskin),
+         icon = 'fa-area-chart')
+```
+
+### Highest Illiterate
+
+```{r}
+valueBox(max(mydata$buta_huruf),
+         icon = 'fa-area-chart')
+```
+
+
+Row
+-------------------------------------
+
+### Poverty By Province
+
+```{r}
+p1 <- mydata %>%
+         group_by(provinsi) %>% 
+         plot_ly(x = ~provinsi,
+                 y = ~penduduk_miskin,
+                 color = "red",
+                 type = 'bar') %>%
+layout(xaxis = list(title = " "),
+yaxis = list(title = 'Percentage'))
+p1
+```
+
+
+
+### Top poverty in Indonesia by Province
+
+```{r}
+p2 <- mydata %>%
+         group_by(provinsi) %>%
+         filter(penduduk_miskin>15) %>%
+         plot_ly(labels = ~provinsi,
+                 values = ~penduduk_miskin,
+                 marker = list(colors = mycolors)) %>%
+         add_pie(hole = 0.4) %>%
+         layout(xaxis = list(zeroline = F,
+                             showline = F,
+                             showticklabels = F,
+                             showgrid = F),
+                yaxis = list(zeroline = F,
+                             showline = F,
+                             showticklabels=F,
+                             showgrid=F))
+p2
+```
+
+
+Row
+-------------------------------------
+
+### Illiterate in Indonesia by Province
+
+```{r}
+p3 <- mydata %>%
+         group_by(provinsi) %>% 
+         plot_ly(x = ~provinsi,
+                 y = ~buta_huruf,
+                 color = "green",
+                 type = "bar") %>%
+layout(xaxis = list(title = " "),
+yaxis = list(title = 'Percentage'))
+p3
+
+```
+
+
+
+
+
+###  Net Enrollment School
+
+```{r}
+p4 <- mydata %>%
+         group_by(provinsi) %>% 
+         plot_ly(x = ~provinsi,
+                 y = ~partisipasi_sekolah,
+                 color = "blue",
+                 type = "bar") %>%
+layout(xaxis = list(title = " "),
+yaxis = list(title = 'Percentage'))
+p4
+
+```
+
+
+
+###  Employment
+
+```{r}
+p5 <- mydata %>%
+         group_by(provinsi) %>% 
+         plot_ly(x = ~provinsi,
+                 y = ~pengangguran,
+                 color = "blue",
+                 type = "bar") %>%
+layout(xaxis = list(title = " "),
+yaxis = list(title = 'Count'))
+p5
+
+```
+
+
+
+
+Scatter Plot
+=====================================
+
+Row
+-------------------------------------
+
+### Scatter Plot of Poverty Vs Life Expectancy
+
+```{r}
+p6 <- plot_ly(mydata, x=~life_expentancy) %>%
+         add_markers(y =~penduduk_miskin,
+                     text = ~paste("Povery: ",penduduk_miskin),
+                     showlegend = F) %>%
+         add_lines(y = ~fitted(loess(penduduk_miskin ~ life_expentancy)),
+                   name = "Loess Smoother",
+                   color = I("#FFC125"),
+                   showlegend = T,
+                   line = list(width=5)) %>%
+         layout(xaxis = list(title = "Life Expectancy"),
+                yaxis = list(title = "Poverty"))
+p6
+```
+
+
+
+### Scatter Plot of Poverty Vs Illiterate
+
+```{r}
+p7 <- plot_ly(mydata, x=~buta_huruf) %>%
+         add_markers(y =~penduduk_miskin,
+                     text = ~paste("Poverty",penduduk_miskin),
+                     showlegend = F) %>%
+         add_lines(y = ~fitted(loess(penduduk_miskin ~ buta_huruf)),
+                   name = "Loess Smoother",
+                   color = I("#FF0000"),
+                   showlegend = T,
+                   line = list(width=5)) %>%
+         layout(xaxis = list(title = "Illiterate"),
+                yaxis = list(title = "Poverty"))
+p7
+```
+
+
+Row
+-------------------------------------
+
+### Scatter Plot of Poverty Vs Lama Sekolah
+
+```{r}
+p8 <- plot_ly(mydata, x =~ lama_sekolah) %>%
+         add_markers(y =~penduduk_miskin,
+                     text = ~paste("Poverty",penduduk_miskin),
+                     showlegend = F) %>%
+         add_lines(y = ~fitted(loess(penduduk_miskin ~ lama_sekolah)),
+                   name = "Loess Smoother",
+                   color = I("#E7298A"),
+                   showlegend = T,
+                   line = list(width=5)) %>%
+         layout(xaxis = list(title = "Lama Sekolah"),
+                yaxis = list(title = "Poverty"))
+p8
+```
+
+
+### Scatter Plot of Poverty Vs Human development Index
+
+```{r}
+p9 <- plot_ly(mydata, x =~ ipm) %>%
+         add_markers(y =~penduduk_miskin,
+                     text = ~paste("Poverty",penduduk_miskin),
+                     showlegend = F) %>%
+         add_lines(y = ~fitted(loess(penduduk_miskin ~ ipm)),
+                   name = "Loess Smoother",
+                   color = I("#545454"),
+                   showlegend = T,
+                   line = list(width=5)) %>%
+         layout(xaxis = list(title = "HDI"),
+                yaxis = list(title = "Poverty"))
+p9
+```
+
+
+Tree Map 
+========================================
+
+### Indonesia Poverty
+
+```{r}
+treemap(mydata,
+          
+          # data
+          index="provinsi",
+          vSize="penduduk_miskin",
+          type="index",
+          
+          # Main
+          title="",
+          palette="Dark2",
+          
+          # Borders:
+          border.col=c("black"),             
+          border.lwds=1,                         
+          
+          # Labels
+          fontsize.labels=0.5,
+          fontcolor.labels="white",
+          fontface.labels=1,            
+          bg.labels=c("transparent"),              
+          align.labels=c("left", "top"),                                  
+          overlap.labels=0.5,
+          inflate.labels=T                        # If true, labels are bigger when rectangle is bigger.
+          
+  )
+  
+
+
+
+```
+
+
+
+
+
+Data Table
+========================================
+
+```{r}
+datatable(mydata,
+          caption = "Indonesia Poverty",
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 5))
+```
+
+
+
+Summary {data-orientation=columns} 
+===========================================
+
+Column 
+-----------------------------------
+
+### Highest poverty
+
+```{r}
+valueBox(max(mydata$penduduk_miskin),
+         icon = "fa-area-chart" )
+```
+
+### Lowest poverty
+
+
+```{r}
+valueBox(min(mydata$penduduk_miskin),
+         icon = "fa-area-chart" )
+```
+
+
+### Highest Illiterate
+
+
+```{r}
+valueBox(max(mydata$buta_huruf),
+         icon = "fa-area-chart" )
+```
+
+
+### Lowest Illiterate
+
+
+```{r}
+valueBox(min(mydata$buta_huruf),
+         icon = "fa-area-chart" )
+```
+
+### Total Unemployment Indonesia
+```{r}
+
+valueBox(sum(mydata$pengangguran),
+         icon = "fa-area-chart")
+```
+
+
+Column
+---------------------------
+
+Report
+
+* The highest of poverty in Indonesia is Papua with  `r max(mydata$penduduk_miskin)` percent.
+
+* The lowest poverty in Indonesia is DKI Jakarta with `r min(mydata$penduduk_miskin)` percect.
+
+* The highest Illiterate in Indonesia is Papua with  `r max(mydata$buta_huruf)` percent.
+
+* The lowest Illiter in Indonesia is DKI Jakarta with `r min(mydata$buta_huruf)` percent.
+
+* The Total Unemployment in Indonesia  was `r sum(mydata$pengangguran)` million.
+
+This report was generated on `r format(Sys.Date(), format = "%B %d, %Y")`.
+
+About Report
+========================================
+
+Created by: Antonito HC (Majoring in Statistics and Minoring at Data Science & Business Analytics)
